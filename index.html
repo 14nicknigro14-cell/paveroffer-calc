@@ -50,6 +50,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}   /* make the hidden attribute beat display:grid/flex rules */
 body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.55}
 .wrap{max-width:1180px;margin:0 auto;padding-inline:clamp(16px,4vw,40px)}
 h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;letter-spacing:-0.02em}
@@ -470,7 +471,7 @@ input[type=range]{height:30px}
     ["r-rev","r-story"].forEach(id => $(id).removeAttribute("aria-hidden"));
     document.querySelector(".kpis").removeAttribute("aria-hidden");
     $("r-body").setAttribute("aria-live","polite");
-    $("lock-badge").hidden = true;
+    const badge = $("lock-badge"); if (badge) badge.remove();
     $("gate").hidden = true;
     $("ok-msg").textContent = name ? `Here are your numbers, ${name}.` : "Here are your numbers.";
     $("after").hidden = false;
