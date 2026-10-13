@@ -1,4 +1,4 @@
-<title>Reactivation Revenue Calculator</title>
+<title>Reactivation Calculator V2</title>
 <!-- When you put this on your own site, add these to the page <head>:
 <meta name="description" content="See how many extra jobs your past customers could book you this year. Free calculator for home service contractors.">
 <meta name="theme-color" content="#13212B">
@@ -275,7 +275,6 @@ input[type=range]{height:30px}
           <div class="kpi"><b id="r-jobs">104</b><span>extra jobs / year</span></div>
           <div class="kpi"><b id="r-month">$4,050</b><span>extra revenue / month</span></div>
         </div>
-        <p class="story" id="r-story" aria-hidden="true">That’s about 210 past customers raising their hand this year, and 104 of them booked because you called back fast.</p>
         <div class="lock-badge" id="lock-badge"><span>🔒 Your results are ready</span></div>
       </div>
 
@@ -294,63 +293,14 @@ input[type=range]{height:30px}
       </form>
 
       <div class="after" id="after" hidden>
-        <p id="ok-msg"></p>
-        <p class="soft">Change your answers on the left any time to see how the numbers move.</p>
         <span class="next">Want these jobs?</span>
         <a class="btn btn-book" href="#book">Book a free call →</a>
       </div>
     </aside>
   </main>
 
-  <section class="section" aria-labelledby="how">
-    <div class="eyebrow">What we set up for you</div>
-    <h2 id="how">No CRM? No problem. We set everything up and run the campaigns.</h2>
-    <p class="lead">You get a simple phone and text system built for contractors, and we use it to bring your past customers back. You don’t need to learn new software or write a single message.</p>
-    <div class="pillars">
-      <div class="pillar">
-        <span class="kicker">Your new phone system</span>
-        <h3>Every customer, call, and text in one app</h3>
-        <p>We load your customers into a phone and text system on your phone, so you can call and text back faster than anyone else in town.</p>
-        <ul><li>One business number for calls and texts</li><li>Full customer history at a glance</li><li>Works from your phone in the truck</li></ul>
-      </div>
-      <div class="pillar">
-        <span class="kicker">Missed-call text-back</span>
-        <h3>Never lose a job to voicemail again</h3>
-        <p>When you can’t pick up, the homeowner instantly gets a text letting them know you’ll call right back, and you get a reminder to do it.</p>
-        <div class="sms" aria-label="Example texts">
-          <div class="bubble out"><small>To homeowner, 2 seconds later</small>Sorry we missed your call! We’re on a job and will call you right back.</div>
-          <div class="bubble alert"><small>To you</small>Missed call from (561) 555-0148. Call them back now.</div>
-        </div>
-      </div>
-      <div class="pillar">
-        <span class="kicker">Reactivation campaigns</span>
-        <h3>Limited-time offers to your past customers</h3>
-        <p>Once a quarter or twice a year, we text your past customers a limited-time offer built around the job you already did for them. When they reply, you get an alert so you can book them while they’re ready.</p>
-        <ul><li><b>Re-inspect:</b> a safety check on the work you did</li><li><b>Refresh:</b> maintenance to keep it looking and working like new</li><li><b>Revamp:</b> upgrades and add-ons to their original project</li></ul>
-        <p>Sent by us, in your business’s name. Replies come straight to your phone.</p>
-      </div>
-    </div>
-    <div class="you-do"><b>Your part:</b> send us your customer list in whatever form you have it, and call back the people who reply.</div>
-  </section>
 
-  <section class="section" aria-labelledby="speed-h">
-    <div class="eyebrow">Why fast callbacks matter</div>
-    <h2 id="speed-h">A reply is a hand raised. The first contractor to call back gets the job.</h2>
-    <p class="lead">When a past customer texts back “yes, I need that,” they’re ready to book right now. Wait a few hours and they’ve called someone else or put it off another year. Your new system alerts you the second they reply, so you can call back within a minute.</p>
-    <div class="chart" id="chart"></div>
-    <p class="chart-note">Share of replies that turn into booked jobs, by how fast someone calls back.</p>
-  </section>
 
-  <section class="section" aria-labelledby="faq">
-    <h2 id="faq">Questions contractors ask</h2>
-    <div class="faq">
-      <details><summary>What’s a reactivation campaign?</summary><p>It’s a limited-time offer sent by text to customers you’ve already served, tied to the work you did for them: a safety re-inspection, a maintenance refresh, or an upgrade to their project. They already know and trust you, so they book far more often than strangers from an ad.</p></details>
-      <details><summary>Do I need a CRM or any software?</summary><p>No. We set up a phone and text system for you and load your customers into it. If you’ve never used a CRM, that’s normal. Most of the contractors we work with haven’t.</p></details>
-      <details><summary>Will texting old customers annoy them?</summary><p>Not when the offer is relevant and from a business they already used. A safety check on work you did for them reads as service, not spam. Every message includes an easy opt-out.</p></details>
-      <details><summary>How is this estimate calculated?</summary><p>We use your list size and average job cost, along with typical reply and booking rates from campaigns we run for your trade. Your actual results depend on your list, your market, and the season.</p></details>
-      <details><summary>Does this count repeat business?</summary><p>No. We only count the first job from each customer who comes back. Many of them call you again later, so the real number tends to be higher.</p></details>
-    </div>
-  </section>
 
   <section class="cta" id="book" aria-labelledby="cta-h">
     <div>
@@ -443,7 +393,7 @@ input[type=range]{height:30px}
     $(k+"-r").addEventListener("input", () => { $(k).value = toVal(k, +$(k+"-r").value); calc(); });
   });
 
-  $("chart").innerHTML = SPEEDS.map((s,i) =>
+  if ($("chart")) $("chart").innerHTML = SPEEDS.map((s,i) =>
     `<div class="row${i===0?" top":""}">
       <span class="name">${s.label}</span>
       <div class="track"><div class="fill" style="width:${s.rate/SPEEDS[0].rate*100}%"></div></div>
@@ -460,7 +410,6 @@ input[type=range]{height:30px}
     $("r-rev").textContent = money(rev);
     $("r-jobs").textContent = num(jobs);
     $("r-month").textContent = money(rev/12);
-    $("r-story").innerHTML = `That’s about <strong>${num(replies)} past customers</strong> replying to your offers this year, and <strong>${num(jobs)} booked jobs</strong> when you call them back fast.`;
   }
 
   const emailOk = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
@@ -468,12 +417,11 @@ input[type=range]{height:30px}
     unlocked = true;
     calc();
     $("results").classList.remove("locked");
-    ["r-rev","r-story"].forEach(id => $(id).removeAttribute("aria-hidden"));
+    ["r-rev"].forEach(id => $(id).removeAttribute("aria-hidden"));
     document.querySelector(".kpis").removeAttribute("aria-hidden");
     $("r-body").setAttribute("aria-live","polite");
     const badge = $("lock-badge"); if (badge) badge.remove();
     $("gate").hidden = true;
-    $("ok-msg").textContent = name ? `Here are your numbers, ${name}.` : "Here are your numbers.";
     $("after").hidden = false;
     $("jump").classList.remove("show");
   }
