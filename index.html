@@ -317,15 +317,17 @@ input[type=range]{height:30px}
 
 <script>
 (function(){
-  /* ===== YOUR ASSUMPTIONS (hidden from contractors), tuned for hardscaping companies =====
+  /* ===== YOUR ASSUMPTIONS (hidden from contractors) =====
+     Works for any trade (pool, lawn, landscaping, hardscaping, construction...): the sliders
+     cover small and big tickets, so nobody has to pick a trade.
      START:      where the two sliders start
      SCALES:     each slider's range (min / max) and rounding, further down
      REPLY_RATE: % of the whole past-customer list that replies to one campaign
      CAMPAIGNS:  campaigns run per year
      BOOK_RATE:  % of replies that book when called back fast
-     With the starting values: 200 × 5% × 2 × 50% = 10 extra jobs × $10,000 = $100,000 / year */
-  const START = {past:200, ticket:10000};
-  const REPLY_RATE = 5;
+     With the starting values: 300 × 6% × 2 × 50% = 18 extra jobs × $2,500 = $45,000 / year */
+  const START = {past:300, ticket:2500};
+  const REPLY_RATE = 6;
   const CAMPAIGNS = 2;
   const SPEEDS = [
     {label:"Under 1 min",  rate:50},
@@ -345,8 +347,8 @@ input[type=range]{height:30px}
 
   // Log-scale sliders so small and large businesses both get fine control
   const SCALES = {
-    past:   {min:10,   max:3000,  round:v => v<100 ? Math.round(v) : v<1000 ? Math.round(v/10)*10 : Math.round(v/50)*50},
-    ticket: {min:1000, max:75000, round:v => v<5000 ? Math.round(v/50)*50 : v<20000 ? Math.round(v/250)*250 : Math.round(v/1000)*1000}
+    past:   {min:10, max:5000,   round:v => v<100 ? Math.round(v) : v<1000 ? Math.round(v/10)*10 : Math.round(v/50)*50},
+    ticket: {min:50, max:100000, round:v => v<500 ? Math.round(v/5)*5 : v<5000 ? Math.round(v/50)*50 : v<20000 ? Math.round(v/250)*250 : Math.round(v/1000)*1000}
   };
   const toVal = (k,p) => { const s = SCALES[k]; return s.round(s.min * Math.pow(s.max/s.min, p/1000)); };
   const toPos = (k,v) => { const s = SCALES[k]; v = Math.min(Math.max(v, s.min), s.max); return Math.round(1000*Math.log(v/s.min)/Math.log(s.max/s.min)); };
@@ -440,10 +442,8 @@ input[type=range]{height:30px}
   if (CODE){
     fetch("/api/link/" + CODE).then(r => r.ok ? r.json() : null).then(d => {
       if (!d || !d.person) return;
-      // The form is left blank on purpose: the name/email we have from the call can be wrong.
+      // The form and headline are left alone on purpose: the name/email from the call can be wrong.
       textedPhone = d.person.phone || "";
-      const who = d.person.first_name || d.person.company;
-      if (who) document.querySelector(".hero .eyebrow").textContent = "Made for " + who + " · Past customer revenue calculator";
       if ($("cal").firstChild) loadCalendar();
       // Tell the back end this person opened their link (once the page is actually on screen).
       const viewed = () => post("/api/view", {code:CODE});
