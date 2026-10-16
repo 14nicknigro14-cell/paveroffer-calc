@@ -85,12 +85,6 @@ a{color:inherit}
 .q-sub{color:var(--ink-soft);font-size:.92rem;margin-top:-6px;padding-left:38px}
 @media (max-width:480px){.q-sub{padding-left:0}}
 
-.trades{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-@media (max-width:420px){.trades{grid-template-columns:1fr 1fr}}
-.trade{display:flex;align-items:center;text-align:left;padding:14px;min-height:56px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer;font:700 .95rem var(--font-body);line-height:1.2;transition:border-color .15s ease, transform .15s ease}
-.trade:hover{border-color:var(--teal);transform:translateY(-1px)}
-.trade[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
-
 .field{display:grid;gap:8px;min-width:0}
 .box{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;background:var(--paper);overflow:hidden}
 .box:focus-within{border-color:var(--focus)}
@@ -192,7 +186,7 @@ details p{color:var(--ink-soft);margin-top:10px;max-width:68ch}
 /* ---------- responsive + performance (Webflow-style breakpoints: 991 / 767 / 479) ---------- */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
-button,.btn,.trade,input[type=range]{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button,.btn,input[type=range]{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 input[type=range]{height:30px}
 .gate input{font-size:1rem}                 /* 16px+ stops iOS from zooming into fields */
 .box input{font-size:max(1rem,1.4rem)}
@@ -221,7 +215,6 @@ input[type=range]{height:30px}
   .brand{font-size:1.1rem}
   .inputs{gap:26px}
   .q h2{font-size:1.15rem}
-  .trade{min-height:50px;padding:12px;font-size:.9rem}
   .big{font-size:2.6rem}
   .kpi b{font-size:1.25rem}
   .row .name::after{font-size:.62rem}
@@ -242,29 +235,24 @@ input[type=range]{height:30px}
   <header class="hero">
     <div class="eyebrow">Free tool · Past customer revenue calculator</div>
     <h1>Your next jobs are <em>already in your phone</em></h1>
-    <p>The customers you’ve already served are the easiest jobs you’ll ever book. Most contractors never reach back out to them. Answer three quick questions to see how many extra jobs that’s worth to you.</p>
+    <p>The customers you’ve already served are the easiest jobs you’ll ever book. Most contractors never reach back out to them. Answer two quick questions to see how many extra jobs that’s worth to you.</p>
   </header>
 
   <main class="calc" id="main">
     <div class="inputs">
       <div class="q">
-        <div class="q-head"><span class="q-num">1</span><h2 id="q1">What’s your trade?</h2></div>
-        <div class="trades" id="trades" role="group" aria-labelledby="q1"></div>
-      </div>
-
-      <div class="q">
-        <div class="q-head"><span class="q-num">2</span><h2><label for="past">How many past customers do you have?</label></h2></div>
+        <div class="q-head"><span class="q-num">1</span><h2><label for="past">How many past customers do you have?</label></h2></div>
         <p class="q-sub">Everyone you’ve ever done a job for. A rough guess is fine.</p>
         <div class="field">
           <div class="box"><input id="past" type="number" inputmode="numeric" min="1" step="1"><span class="affix">customers</span></div>
           <input id="past-r" type="range" min="0" max="1000" step="1" aria-label="Past customers, slider">
-          <div class="scale" id="past-scale" aria-hidden="true"><span>10</span><span>220</span><span>5,000</span></div>
+          <div class="scale" id="past-scale" aria-hidden="true"></div>
           <span class="hint">Not sure? Count old invoices, your QuickBooks customers, or the customer contacts in your phone.</span>
         </div>
       </div>
 
       <div class="q">
-        <div class="q-head"><span class="q-num">3</span><h2><label for="ticket">How much does an average job cost?</label></h2></div>
+        <div class="q-head"><span class="q-num">2</span><h2><label for="ticket">How much does an average job cost?</label></h2></div>
         <p class="q-sub">What a customer typically pays you for one visit or project.</p>
         <div class="field">
           <div class="box"><span class="affix">$</span><input id="ticket" type="number" inputmode="numeric" min="1" step="1"></div>
@@ -329,30 +317,16 @@ input[type=range]{height:30px}
 
 <script>
 (function(){
-  /* ===== YOUR ASSUMPTIONS (hidden from contractors) =====
-     past / ticket: defaults shown when a trade is picked
-     min / max: range of the "average job cost" slider for this trade
-     reply:  % of the whole list that replies to one campaign
-     camps:  campaigns you'd run per year for this trade
-     BOOK_RATE: % of replies that book when called back fast    */
-  const TRADES = [
-    {id:"hvac",       name:"HVAC",             past:600, ticket:475,  min:100, max:15000, reply:7,   camps:4},
-    {id:"plumbing",   name:"Plumbing",         past:700, ticket:425,  min:100, max:10000, reply:6,   camps:2},
-    {id:"electrical", name:"Electrical",       past:450, ticket:375,  min:100, max:10000, reply:5.5, camps:2},
-    {id:"roofing",    name:"Roofing",          past:300, ticket:9500, min:500, max:40000, reply:3.5, camps:2},
-    {id:"pest",       name:"Pest control",     past:900, ticket:240,  min:50,  max:1500,  reply:8,   camps:4},
-    {id:"lawn",       name:"Lawn care",        past:400, ticket:180,  min:30,  max:1000,  reply:9,   camps:4},
-    {id:"landscape",  name:"Landscaping",      past:250, ticket:2800, min:200, max:25000, reply:6,   camps:2},
-    {id:"garage",     name:"Garage doors",     past:400, ticket:350,  min:100, max:5000,  reply:5,   camps:2},
-    {id:"pool",       name:"Pool service",     past:200, ticket:300,  min:75,  max:3000,  reply:8,   camps:2},
-    {id:"cleaning",   name:"House cleaning",   past:300, ticket:180,  min:75,  max:800,   reply:9,   camps:4},
-    {id:"carpet",     name:"Carpet cleaning",  past:500, ticket:250,  min:75,  max:1000,  reply:7,   camps:4},
-    {id:"pressure",   name:"Pressure washing", past:350, ticket:350,  min:100, max:1500,  reply:7,   camps:2},
-    {id:"window",     name:"Window cleaning",  past:300, ticket:325,  min:100, max:1500,  reply:8,   camps:4},
-    {id:"painting",   name:"Painting",         past:200, ticket:3500, min:300, max:15000, reply:4.5, camps:2},
-    {id:"handyman",   name:"Handyman",         past:400, ticket:300,  min:75,  max:2500,  reply:7,   camps:4},
-    {id:"water",      name:"Water treatment",  past:250, ticket:1800, min:150, max:6000,  reply:5.5, camps:2}
-  ];
+  /* ===== YOUR ASSUMPTIONS (hidden from contractors), tuned for hardscaping companies =====
+     START:      where the two sliders start
+     SCALES:     each slider's range (min / max) and rounding, further down
+     REPLY_RATE: % of the whole past-customer list that replies to one campaign
+     CAMPAIGNS:  campaigns run per year
+     BOOK_RATE:  % of replies that book when called back fast
+     With the starting values: 200 × 5% × 2 × 50% = 10 extra jobs × $10,000 = $100,000 / year */
+  const START = {past:200, ticket:10000};
+  const REPLY_RATE = 5;
+  const CAMPAIGNS = 2;
   const SPEEDS = [
     {label:"Under 1 min",  rate:50},
     {label:"Under 5 min",  rate:38},
@@ -367,13 +341,12 @@ input[type=range]{height:30px}
   const money = n => "$" + Math.round(n).toLocaleString("en-US");
   const num = n => Math.round(n).toLocaleString("en-US");
   const val = k => { const v = parseFloat($(k).value); return isFinite(v) && v > 0 ? v : 0; };
-  let trade = TRADES[0];
   let unlocked = false;
 
   // Log-scale sliders so small and large businesses both get fine control
   const SCALES = {
-    past:   {min:10, max:5000,  round:v => v<100 ? Math.round(v) : v<1000 ? Math.round(v/10)*10 : Math.round(v/50)*50},
-    ticket: {min:50, max:20000, round:v => v<500 ? Math.round(v/5)*5 : v<5000 ? Math.round(v/25)*25 : Math.round(v/100)*100}
+    past:   {min:10,   max:3000,  round:v => v<100 ? Math.round(v) : v<1000 ? Math.round(v/10)*10 : Math.round(v/50)*50},
+    ticket: {min:1000, max:75000, round:v => v<5000 ? Math.round(v/50)*50 : v<20000 ? Math.round(v/250)*250 : Math.round(v/1000)*1000}
   };
   const toVal = (k,p) => { const s = SCALES[k]; return s.round(s.min * Math.pow(s.max/s.min, p/1000)); };
   const toPos = (k,v) => { const s = SCALES[k]; v = Math.min(Math.max(v, s.min), s.max); return Math.round(1000*Math.log(v/s.min)/Math.log(s.max/s.min)); };
@@ -384,23 +357,10 @@ input[type=range]{height:30px}
     $(k+"-scale").innerHTML = [s.min, mid, s.max].map(v => `<span>${prefix}${v.toLocaleString("en-US")}</span>`).join("");
   }
 
-  const grid = $("trades");
-  TRADES.forEach(t => {
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "trade"; b.dataset.id = t.id; b.textContent = t.name;
-    b.setAttribute("aria-pressed","false");
-    b.addEventListener("click", () => pickTrade(t.id));
-    grid.appendChild(b);
-  });
-  function pickTrade(id){
-    trade = TRADES.find(x => x.id === id);
-    grid.querySelectorAll(".trade").forEach(b => b.setAttribute("aria-pressed", b.dataset.id===id ? "true":"false"));
-    SCALES.ticket.min = trade.min; SCALES.ticket.max = trade.max;
-    renderScale("ticket", "$");
-    ["past","ticket"].forEach(k => { $(k).value = trade[k]; $(k+"-r").value = toPos(k, trade[k]); });
-    calc();
-  }
+  renderScale("past", "");
+  renderScale("ticket", "$");
   ["past","ticket"].forEach(k => {
+    $(k).value = START[k]; $(k+"-r").value = toPos(k, START[k]);
     $(k).addEventListener("input", () => { $(k+"-r").value = toPos(k, val(k)); calc(); });
     $(k+"-r").addEventListener("input", () => { $(k).value = toVal(k, +$(k+"-r").value); calc(); });
   });
@@ -414,7 +374,7 @@ input[type=range]{height:30px}
 
   function figures(){
     const past = val("past"), ticket = val("ticket");
-    const replies = past * trade.reply/100 * trade.camps;
+    const replies = past * REPLY_RATE/100 * CAMPAIGNS;
     const jobs = replies * BOOK_RATE;
     return {past, ticket, jobs, rev: jobs * ticket};
   }
@@ -457,8 +417,8 @@ input[type=range]{height:30px}
     // Send the lead to GHL (via /api/submit). Results show right away; we don't wait for it.
     const fig = figures(), co = $("company").value.trim();
     post("/api/submit", {code:CODE, first_name:f, last_name:l, email:em, company:co, website:$("website").value,
-      trade:trade.name, past_customers:fig.past, avg_job:fig.ticket, jobs_year:fig.jobs, revenue_year:fig.rev});
-    Object.assign(person, {first_name:f, last_name:l, email:em, company:co});
+      past_customers:fig.past, avg_job:fig.ticket, jobs_year:fig.jobs, revenue_year:fig.rev});
+    Object.assign(typed, {first_name:f, last_name:l, email:em});
     if ($("cal").firstChild) loadCalendar();   // refill the calendar with what they just typed
     try { localStorage.setItem("reactivation-unlocked", f); } catch(_) {}
     unlock(f);
@@ -474,15 +434,15 @@ input[type=range]{height:30px}
      back end (/api/link/<code>, a Cloudflare Worker reached through vercel.json) who it's for. */
   const CALENDAR_URL = "https://api.leadconnectorhq.com/widget/booking/FmqTlGaWXqKoZEM6yfKT"; // GHL "Paver Offer – Free 15-min Call"
   const CODE = (location.pathname.match(/^\/c\/([A-Za-z0-9]{4,20})\/?$/) || [])[1] || "";
-  const person = {};
+  const typed = {};   // what they typed into the form; only this pre-fills the calendar
+  let textedPhone = "";   // the number we texted the link to
 
   if (CODE){
     fetch("/api/link/" + CODE).then(r => r.ok ? r.json() : null).then(d => {
       if (!d || !d.person) return;
-      Object.assign(person, d.person);
-      // Fill in what we already know about them (unless they've started typing).
-      [["fname","first_name"],["lname","last_name"],["email","email"],["company","company"]].forEach(([id,k]) => { if (person[k] && !$(id).value) $(id).value = person[k]; });
-      const who = person.first_name || person.company;
+      // The form is left blank on purpose: the name/email we have from the call can be wrong.
+      textedPhone = d.person.phone || "";
+      const who = d.person.first_name || d.person.company;
       if (who) document.querySelector(".hero .eyebrow").textContent = "Made for " + who + " · Past customer revenue calculator";
       if ($("cal").firstChild) loadCalendar();
       // Tell the back end this person opened their link (once the page is actually on screen).
@@ -495,12 +455,12 @@ input[type=range]{height:30px}
     }).catch(() => {});
   }
 
-  // GHL booking calendar, embedded in the "Book a call" band. It loads when the band gets close,
-  // so it can be pre-filled with the name/email they typed into the form.
+  // GHL booking calendar, in the "Book a call" band. It stays hidden until they click a
+  // "Book a call" button, and is pre-filled with what they typed into the form.
   function loadCalendar(){
     let src;
     try { src = new URL(CALENDAR_URL); } catch(_) { return; }
-    const fill = {first_name:person.first_name, last_name:person.last_name, email:person.email, phone:person.phone};
+    const fill = {first_name:typed.first_name, last_name:typed.last_name, email:typed.email, phone:textedPhone};
     Object.entries(fill).forEach(([k,v]) => { if (v) src.searchParams.set(k, v); });
     let frame = $("cal").querySelector("iframe");
     if (!frame){
@@ -515,17 +475,18 @@ input[type=range]{height:30px}
     }
     if (frame.src !== src.href) frame.src = src.href;
   }
-  if (CALENDAR_URL){
+  function openCalendar(e){
+    if (!CALENDAR_URL) return;
+    e.preventDefault();
     $("book").classList.add("has-cal");
     $("book-link").hidden = true;
     $("cal").hidden = false;
-    if ("IntersectionObserver" in window){
-      const io = new IntersectionObserver(([e]) => { if (e.isIntersecting){ io.disconnect(); loadCalendar(); } }, {rootMargin:"800px 0px"});
-      io.observe($("book"));
-    } else loadCalendar();
+    loadCalendar();
+    $("book").scrollIntoView({block:"start"});
   }
+  document.querySelectorAll('a[href="#book"]').forEach(a => a.addEventListener("click", openCalendar));
 
-  pickTrade("hvac");
+  calc();
   try { const n = localStorage.getItem("reactivation-unlocked"); if (n) unlock(n); } catch(_) {}
 })();
 </script>
