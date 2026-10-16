@@ -71,7 +71,7 @@ a{color:inherit}
 .hero{padding-block:28px 8px;display:grid;gap:14px;max-width:780px}
 .eyebrow{font:600 .78rem var(--font-body);text-transform:uppercase;letter-spacing:.12em;color:var(--teal)}
 .hero h1{font-size:clamp(2.2rem,5.4vw,3.9rem);line-height:1.02;font-weight:800}
-.hero h1 em{font-style:normal;background:linear-gradient(transparent 62%, var(--accent) 62%, var(--accent) 92%, transparent 92%);padding-inline:2px}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 62%, var(--accent) 62%, var(--accent) 92%, transparent 92%);padding-inline:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .hero p{font-size:1.12rem;color:var(--ink-soft);max-width:62ch}
 
 /* calculator */
@@ -194,7 +194,8 @@ input[type=range]{height:30px}
 .jump .btn{width:100%;padding-block:14px;font-size:1rem}
 
 @media (max-width:991px){
-  .results{position:static}
+  .results{position:relative}   /* not sticky, but keeps its striped top edge inside the panel */
+  .hero{text-align:center;justify-items:center;margin-inline:auto}   /* centered on phones and tablets */
   .calc{gap:20px;padding-block:24px 48px}
   .jump.show{display:block}
 }
@@ -230,8 +231,8 @@ input[type=range]{height:30px}
 
   <header class="hero">
     <div class="eyebrow">Free tool · Past customer revenue calculator</div>
-    <h1>Your next jobs are <em>already in your phone</em></h1>
-    <p>The customers you’ve already served are the easiest jobs you’ll ever book. Most contractors never reach back out to them. Answer two quick questions to see how many extra jobs that’s worth to you.</p>
+    <h1>See what your <em>past customers</em> are worth</h1>
+    <p>They’re the easiest jobs you’ll ever book. Answer two quick questions to see what reaching back out to them with the Paver Offer system is worth to you.</p>
   </header>
 
   <main class="calc" id="main">
