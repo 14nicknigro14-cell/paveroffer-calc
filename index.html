@@ -71,7 +71,7 @@ a{color:inherit}
 .hero{padding-block:28px 8px;display:grid;gap:14px;max-width:780px}
 .eyebrow{font:600 .78rem var(--font-body);text-transform:uppercase;letter-spacing:.12em;color:var(--teal)}
 .phone-only{display:none}
-@media (max-width:767px){.desk-only{display:none}.phone-only{display:inline}}   /* shorter label on phones */
+@media (max-width:767px){.desk-only{display:none}.phone-only{display:inline}.nav .btn{display:none}.brand{font-size:1rem}}   /* phones: shorter label, smaller logo, no Book a call in the top bar */
 .hero h1{font-size:clamp(2.2rem,5.4vw,3.9rem);line-height:1.02;font-weight:800}
 .hero h1 em{font-style:normal;background:linear-gradient(transparent 62%, var(--accent) 62%, var(--accent) 92%, transparent 92%);padding-inline:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .hero p{font-size:1.12rem;color:var(--ink-soft);max-width:62ch}
@@ -210,8 +210,6 @@ input[type=range]{height:30px}
 }
 @media (max-width:479px){
   .nav{padding-block:14px}
-  .nav .btn{padding:8px 14px;font-size:.88rem}
-  .brand{font-size:1.1rem}
   .inputs{gap:26px}
   .q h2{font-size:1.15rem}
   .big{font-size:2.6rem}
