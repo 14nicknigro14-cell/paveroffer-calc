@@ -70,6 +70,8 @@ a{color:inherit}
 
 .hero{padding-block:28px 8px;display:grid;gap:14px;max-width:780px}
 .eyebrow{font:600 .78rem var(--font-body);text-transform:uppercase;letter-spacing:.12em;color:var(--teal)}
+.phone-only{display:none}
+@media (max-width:767px){.desk-only{display:none}.phone-only{display:inline}}   /* shorter label on phones */
 .hero h1{font-size:clamp(2.2rem,5.4vw,3.9rem);line-height:1.02;font-weight:800}
 .hero h1 em{font-style:normal;background:linear-gradient(transparent 62%, var(--accent) 62%, var(--accent) 92%, transparent 92%);padding-inline:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .hero p{font-size:1.12rem;color:var(--ink-soft);max-width:62ch}
@@ -230,7 +232,7 @@ input[type=range]{height:30px}
   </nav>
 
   <header class="hero">
-    <div class="eyebrow">Free tool · Past customer revenue calculator</div>
+    <div class="eyebrow"><span class="desk-only">Free tool · Past customer revenue calculator</span><span class="phone-only">Free revenue calculator</span></div>
     <h1>See what your <em>past customers</em> are worth</h1>
     <p>They’re the easiest jobs you’ll ever book. Answer two quick questions to see what reaching back out to them with our system is worth to you.</p>
   </header>
