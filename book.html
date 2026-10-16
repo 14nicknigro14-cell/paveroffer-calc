@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Book a Call | Paver Offer</title>
+<meta name="description" content="Book a free 15-minute call with Paver Offer.">
+<meta name="theme-color" content="#13212B">
+<meta name="format-detection" content="telephone=no">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Just the booking calendar, so the person can focus on picking a time. Same colors as index.html. */
+:root{
+  --paper:#F5F6F2; --ink:#13212B; --ink-soft:#4A5862; --line:#DCE0DA; --teal:#1F7A72; --focus:#1F7A72;
+  --font-display:"Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --font-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --paper:#0D161D; --ink:#EEF1EC; --ink-soft:#A3B0B7; --line:#26363F; --teal:#3FA89E; --focus:#4FB5AB; color-scheme:dark; }
+}
+:root[data-theme="dark"]{ --paper:#0D161D; --ink:#EEF1EC; --ink-soft:#A3B0B7; --line:#26363F; --teal:#3FA89E; --focus:#4FB5AB; color-scheme:dark; }
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.55}
+.wrap{max-width:960px;margin:0 auto;padding-inline:clamp(16px,4vw,40px)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:20px}
+.brand{font-family:var(--font-display);font-weight:800;font-size:1.25rem;color:inherit;text-decoration:none}
+.back{font-weight:600;font-size:.95rem;color:var(--teal);text-decoration:none;padding:8px 2px}
+.back:hover{text-decoration:underline}
+h1{font-family:var(--font-display);font-weight:800;letter-spacing:-0.02em;font-size:clamp(1.8rem,4.5vw,2.6rem);line-height:1.1;margin:12px 0 8px;text-wrap:balance}
+.lead{color:var(--ink-soft);margin:0 0 24px;max-width:56ch}
+/* The GHL calendar is white, so it sits on a white card in dark mode too. */
+.cal{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:48px;min-height:700px}
+.cal iframe{position:relative;z-index:1;display:block;width:100%;min-height:700px;border:0;overflow:hidden}
+/* GHL keeps the calendar hidden until it has loaded; this shows in the meantime */
+.loading{position:absolute;inset:0;display:grid;place-items:center;color:#4A5862;font-weight:600}
+@media (max-width:479px){ .nav{padding-block:14px} .cal{border-radius:12px;margin-inline:-6px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="/">Paver Offer</a>
+    <a class="back" href="/" id="back">← Back</a>
+  </nav>
+
+  <main>
+    <h1>Book your free 15-minute call</h1>
+    <p class="lead">Pick a time that works for you. We’ll look at your customer list and show you what your first campaign would look like.</p>
+    <div class="cal" id="cal"><p class="loading" id="loading">Loading calendar…</p></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  // GHL calendar "Paver Offer – Free 15-min Call"
+  const CALENDAR_URL = "https://api.leadconnectorhq.com/widget/booking/FmqTlGaWXqKoZEM6yfKT";
+
+  // Pre-fill with what the calculator page saved: the name/email they typed, and the number we texted.
+  let saved = {};
+  try { saved = JSON.parse(sessionStorage.getItem("paveroffer-booking") || "{}"); } catch(_) {}
+  const src = new URL(CALENDAR_URL);
+  ["first_name","last_name","email","phone"].forEach(k => { if (saved[k]) src.searchParams.set(k, saved[k]); });
+
+  const frame = document.createElement("iframe");
+  frame.title = "Book a call";
+  frame.scrolling = "no";
+  frame.id = src.pathname.split("/").pop() + "_" + Date.now(); // GHL's resizer finds the frame by this id
+  frame.src = src.href;
+  document.getElementById("cal").appendChild(frame);
+  // Remove "Loading calendar…" once GHL's script makes the calendar visible.
+  new MutationObserver((_, obs) => {
+    if (frame.dataset.initialIframeHidden && frame.style.visibility !== "hidden"){ document.getElementById("loading").remove(); obs.disconnect(); }
+  }).observe(frame, {attributes:true, attributeFilter:["style"]});
+  const s = document.createElement("script");
+  s.src = "https://link.msgsndr.com/js/form_embed.js"; s.async = true;
+  document.body.appendChild(s);
+
+  // "Back" returns to the calculator they came from (their results stay on screen).
+  document.getElementById("back").addEventListener("click", e => {
+    if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1){
+      e.preventDefault(); history.back();
+    }
+  });
+})();
+</script>
+</body>
+</html>

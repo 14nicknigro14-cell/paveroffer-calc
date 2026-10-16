@@ -173,10 +173,6 @@ details p{color:var(--ink-soft);margin-top:10px;max-width:68ch}
 .cta{background:var(--teal);color:var(--teal-ink);border-radius:22px;padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:1.3fr auto;gap:24px;align-items:center;margin-bottom:48px;scroll-margin-top:16px}
 @media (max-width:760px){.cta{grid-template-columns:1fr}}
 /* with the calendar shown, the band stacks: heading on top, calendar card below */
-.cta.has-cal{grid-template-columns:1fr}
-.cal{background:#fff;border-radius:16px;overflow:hidden;min-height:640px}
-.cal iframe{display:block;width:100%;min-height:640px;border:0;overflow:hidden}
-@media (max-width:479px){.cta.has-cal{padding-inline:12px}.cal{border-radius:12px}}
 /* spam trap: real people never see or fill this field */
 .trap{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
 .cta h2{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800}
@@ -229,7 +225,7 @@ input[type=range]{height:30px}
 <div class="wrap">
   <nav class="nav" aria-label="Main">
     <div class="brand">Paver Offer</div>
-    <a class="btn btn-book-outline" href="#book">Book a call</a>
+    <a class="btn btn-book-outline" href="/book">Book a call</a>
   </nav>
 
   <header class="hero">
@@ -293,7 +289,7 @@ input[type=range]{height:30px}
 
       <div class="after" id="after" hidden>
         <span class="next">Want these jobs?</span>
-        <a class="btn btn-book" href="#book">Book a free call →</a>
+        <a class="btn btn-book" href="/book">Book a free call →</a>
       </div>
     </aside>
   </main>
@@ -306,8 +302,7 @@ input[type=range]{height:30px}
       <h2 id="cta-h">Ready to win back your past customers?</h2>
       <p>Book a free 15-minute call. We’ll look at your customer list and show you what your first campaign would look like.</p>
     </div>
-    <a class="btn" href="#book" id="book-link">Book a free call →</a>
-    <div class="cal" id="cal" hidden></div>
+    <a class="btn" href="/book">Book a free call →</a>
   </section>
 
   <div class="jump" id="jump"><a class="btn btn-unlock" href="#results">🔓 See my results</a></div>
@@ -420,8 +415,7 @@ input[type=range]{height:30px}
     const fig = figures(), co = $("company").value.trim();
     post("/api/submit", {code:CODE, first_name:f, last_name:l, email:em, company:co, website:$("website").value,
       past_customers:fig.past, avg_job:fig.ticket, jobs_year:fig.jobs, revenue_year:fig.rev});
-    Object.assign(typed, {first_name:f, last_name:l, email:em});
-    if ($("cal").firstChild) loadCalendar();   // refill the calendar with what they just typed
+    saveForBooking({first_name:f, last_name:l, email:em});
     try { localStorage.setItem("reactivation-unlocked", f); } catch(_) {}
     unlock(f);
     if (window.matchMedia("(max-width:991px)").matches) $("results").scrollIntoView({block:"start"});
@@ -431,20 +425,25 @@ input[type=range]{height:30px}
     try { fetch(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data), keepalive:true}).catch(() => {}); } catch(_) {}
   }
 
-  /* ===== Personal links and the booking calendar =====
+  /* ===== Personal links =====
      Texted links look like /c/<code> (vercel.json shows this page for them). The page asks the
      back end (/api/link/<code>, a Cloudflare Worker reached through vercel.json) who it's for. */
-  const CALENDAR_URL = "https://api.leadconnectorhq.com/widget/booking/FmqTlGaWXqKoZEM6yfKT"; // GHL "Paver Offer – Free 15-min Call"
   const CODE = (location.pathname.match(/^\/c\/([A-Za-z0-9]{4,20})\/?$/) || [])[1] || "";
-  const typed = {};   // what they typed into the form; only this pre-fills the calendar
-  let textedPhone = "";   // the number we texted the link to
+
+  // The calendar is on its own page (book.html, at /book). It pre-fills the calendar with what's saved
+  // here: the name/email they typed into the form, and the number we texted the link to.
+  function saveForBooking(details){
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("paveroffer-booking") || "{}");
+      sessionStorage.setItem("paveroffer-booking", JSON.stringify(Object.assign(saved, details)));
+    } catch(_) {}
+  }
 
   if (CODE){
     fetch("/api/link/" + CODE).then(r => r.ok ? r.json() : null).then(d => {
       if (!d || !d.person) return;
       // The form and headline are left alone on purpose: the name/email from the call can be wrong.
-      textedPhone = d.person.phone || "";
-      if ($("cal").firstChild) loadCalendar();
+      if (d.person.phone) saveForBooking({phone:d.person.phone});
       // Tell the back end this person opened their link (once the page is actually on screen).
       const viewed = () => post("/api/view", {code:CODE});
       if (document.visibilityState === "visible") viewed();
@@ -454,37 +453,6 @@ input[type=range]{height:30px}
       });
     }).catch(() => {});
   }
-
-  // GHL booking calendar, in the "Book a call" band. It stays hidden until they click a
-  // "Book a call" button, and is pre-filled with what they typed into the form.
-  function loadCalendar(){
-    let src;
-    try { src = new URL(CALENDAR_URL); } catch(_) { return; }
-    const fill = {first_name:typed.first_name, last_name:typed.last_name, email:typed.email, phone:textedPhone};
-    Object.entries(fill).forEach(([k,v]) => { if (v) src.searchParams.set(k, v); });
-    let frame = $("cal").querySelector("iframe");
-    if (!frame){
-      frame = document.createElement("iframe");
-      frame.title = "Book a call";
-      frame.scrolling = "no";
-      frame.id = (src.pathname.split("/").filter(Boolean).pop() || "booking") + "_" + Date.now(); // GHL's resizer finds the frame by this id
-      $("cal").appendChild(frame);
-      const s = document.createElement("script");
-      s.src = "https://link.msgsndr.com/js/form_embed.js"; s.async = true;
-      document.body.appendChild(s);
-    }
-    if (frame.src !== src.href) frame.src = src.href;
-  }
-  function openCalendar(e){
-    if (!CALENDAR_URL) return;
-    e.preventDefault();
-    $("book").classList.add("has-cal");
-    $("book-link").hidden = true;
-    $("cal").hidden = false;
-    loadCalendar();
-    $("book").scrollIntoView({block:"start"});
-  }
-  document.querySelectorAll('a[href="#book"]').forEach(a => a.addEventListener("click", openCalendar));
 
   calc();
   try { const n = localStorage.getItem("reactivation-unlocked"); if (n) unlock(n); } catch(_) {}
