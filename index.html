@@ -1,12 +1,13 @@
-<title>Reactivation Calculator V2</title>
-<!-- When you put this on your own site, add these to the page <head>:
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paver Offer | Past Customer Revenue Calculator</title>
 <meta name="description" content="See how many extra jobs your past customers could book you this year. Free calculator for home service contractors.">
 <meta name="theme-color" content="#13212B">
 <meta property="og:title" content="How many jobs are hiding in your customer list?">
 <meta property="og:description" content="Free calculator for HVAC, plumbing, roofing, and other home service pros.">
-<meta property="og:image" content="https://your-site.com/calculator-share-image.png">
-<meta name="twitter:card" content="summary_large_image">
--->
 <meta name="format-detection" content="telephone=no">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -175,8 +176,15 @@ summary::after{content:"+";font:600 1.2rem var(--font-num);color:var(--teal)}
 details[open] summary::after{content:"–"}
 details p{color:var(--ink-soft);margin-top:10px;max-width:68ch}
 
-.cta{background:var(--teal);color:var(--teal-ink);border-radius:22px;padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:1.3fr auto;gap:24px;align-items:center;margin-bottom:48px}
+.cta{background:var(--teal);color:var(--teal-ink);border-radius:22px;padding:clamp(28px,5vw,56px);display:grid;grid-template-columns:1.3fr auto;gap:24px;align-items:center;margin-bottom:48px;scroll-margin-top:16px}
 @media (max-width:760px){.cta{grid-template-columns:1fr}}
+/* with the calendar shown, the band stacks: heading on top, calendar card below */
+.cta.has-cal{grid-template-columns:1fr}
+.cal{background:#fff;border-radius:16px;overflow:hidden;min-height:640px}
+.cal iframe{display:block;width:100%;min-height:640px;border:0;overflow:hidden}
+@media (max-width:479px){.cta.has-cal{padding-inline:12px}.cal{border-radius:12px}}
+/* spam trap: real people never see or fill this field */
+.trap{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
 .cta h2{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800}
 .cta p{opacity:.85;margin-top:10px;max-width:52ch}
 .cta .btn{background:var(--teal-ink);color:var(--teal);font-size:1.05rem;padding:16px 28px;justify-self:start}
@@ -222,6 +230,8 @@ input[type=range]{height:30px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <nav class="nav" aria-label="Main">
@@ -287,6 +297,7 @@ input[type=range]{height:30px}
         </div>
         <input id="email" name="email" type="email" placeholder="Email" autocomplete="email" aria-label="Email">
         <input id="company" name="company" placeholder="Company name" autocomplete="organization" aria-label="Company name">
+        <div class="trap" aria-hidden="true"><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
         <div class="err" id="gate-err" hidden></div>
         <button class="btn btn-unlock" type="submit">🔓 Show my results</button>
         <p class="fine">No spam. We only use this to send your results.</p>
@@ -308,6 +319,7 @@ input[type=range]{height:30px}
       <p>Book a free 15-minute call. We’ll look at your customer list and show you what your first campaign would look like.</p>
     </div>
     <a class="btn" href="#book" id="book-link">Book a free call →</a>
+    <div class="cal" id="cal" hidden></div>
   </section>
 
   <div class="jump" id="jump"><a class="btn btn-unlock" href="#results">🔓 See my results</a></div>
@@ -400,13 +412,17 @@ input[type=range]{height:30px}
       <span class="pct">${s.rate}%</span>
     </div>`).join("");
 
-  // Results are only calculated once the lead form is submitted.
-  function calc(){
-    if (!unlocked) return;
+  function figures(){
     const past = val("past"), ticket = val("ticket");
     const replies = past * trade.reply/100 * trade.camps;
     const jobs = replies * BOOK_RATE;
-    const rev = jobs * ticket;
+    return {past, ticket, jobs, rev: jobs * ticket};
+  }
+
+  // Results are only calculated once the lead form is submitted.
+  function calc(){
+    if (!unlocked) return;
+    const {jobs, rev} = figures();
     $("r-rev").textContent = money(rev);
     $("r-jobs").textContent = num(jobs);
     $("r-month").textContent = money(rev/12);
@@ -438,19 +454,80 @@ input[type=range]{height:30px}
     if (!f || !l){ err.textContent = "Add your first and last name."; err.hidden = false; (f ? $("lname") : $("fname")).focus(); return; }
     if (!emailOk(em)){ err.textContent = "Enter a valid email, like you@yourcompany.com."; err.hidden = false; $("email").focus(); return; }
     err.hidden = true;
-    // HOOK POINT: send the lead to your CRM / form endpoint here, e.g.
-    // fetch("https://your-endpoint", {method:"POST", headers:{"Content-Type":"application/json"},
-    //   body: JSON.stringify({first_name:f, last_name:l, email:em, company:$("company").value,
-    //     trade:trade.name, past_customers:val("past"), avg_job:val("ticket")})});
+    // Send the lead to GHL (via /api/submit). Results show right away; we don't wait for it.
+    const fig = figures(), co = $("company").value.trim();
+    post("/api/submit", {code:CODE, first_name:f, last_name:l, email:em, company:co, website:$("website").value,
+      trade:trade.name, past_customers:fig.past, avg_job:fig.ticket, jobs_year:fig.jobs, revenue_year:fig.rev});
+    Object.assign(person, {first_name:f, last_name:l, email:em, company:co});
+    if ($("cal").firstChild) loadCalendar();   // refill the calendar with what they just typed
     try { localStorage.setItem("reactivation-unlocked", f); } catch(_) {}
     unlock(f);
     if (window.matchMedia("(max-width:991px)").matches) $("results").scrollIntoView({block:"start"});
   });
 
-  // HOOK POINT: point the book-a-call buttons at your calendar link (Calendly, GHL calendar, etc.)
-  // document.querySelectorAll('a[href="#book"]').forEach(a => { a.href = "https://your-calendar-link"; a.target = "_blank"; });
+  function post(path, data){
+    try { fetch(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data), keepalive:true}).catch(() => {}); } catch(_) {}
+  }
+
+  /* ===== Personal links and the booking calendar =====
+     Texted links look like /c/<code> (vercel.json shows this page for them). The page asks the
+     back end (/api/link/<code>, a Cloudflare Worker reached through vercel.json) who it's for. */
+  const CALENDAR_URL = "https://api.leadconnectorhq.com/widget/booking/FmqTlGaWXqKoZEM6yfKT"; // GHL "Paver Offer – Free 15-min Call"
+  const CODE = (location.pathname.match(/^\/c\/([A-Za-z0-9]{4,20})\/?$/) || [])[1] || "";
+  const person = {};
+
+  if (CODE){
+    fetch("/api/link/" + CODE).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d || !d.person) return;
+      Object.assign(person, d.person);
+      // Fill in what we already know about them (unless they've started typing).
+      [["fname","first_name"],["lname","last_name"],["email","email"],["company","company"]].forEach(([id,k]) => { if (person[k] && !$(id).value) $(id).value = person[k]; });
+      const who = person.first_name || person.company;
+      if (who) document.querySelector(".hero .eyebrow").textContent = "Made for " + who + " · Past customer revenue calculator";
+      if ($("cal").firstChild) loadCalendar();
+      // Tell the back end this person opened their link (once the page is actually on screen).
+      const viewed = () => post("/api/view", {code:CODE});
+      if (document.visibilityState === "visible") viewed();
+      else document.addEventListener("visibilitychange", function once(){
+        if (document.visibilityState !== "visible") return;
+        document.removeEventListener("visibilitychange", once); viewed();
+      });
+    }).catch(() => {});
+  }
+
+  // GHL booking calendar, embedded in the "Book a call" band. It loads when the band gets close,
+  // so it can be pre-filled with the name/email they typed into the form.
+  function loadCalendar(){
+    let src;
+    try { src = new URL(CALENDAR_URL); } catch(_) { return; }
+    const fill = {first_name:person.first_name, last_name:person.last_name, email:person.email, phone:person.phone};
+    Object.entries(fill).forEach(([k,v]) => { if (v) src.searchParams.set(k, v); });
+    let frame = $("cal").querySelector("iframe");
+    if (!frame){
+      frame = document.createElement("iframe");
+      frame.title = "Book a call";
+      frame.scrolling = "no";
+      frame.id = (src.pathname.split("/").filter(Boolean).pop() || "booking") + "_" + Date.now(); // GHL's resizer finds the frame by this id
+      $("cal").appendChild(frame);
+      const s = document.createElement("script");
+      s.src = "https://link.msgsndr.com/js/form_embed.js"; s.async = true;
+      document.body.appendChild(s);
+    }
+    if (frame.src !== src.href) frame.src = src.href;
+  }
+  if (CALENDAR_URL){
+    $("book").classList.add("has-cal");
+    $("book-link").hidden = true;
+    $("cal").hidden = false;
+    if ("IntersectionObserver" in window){
+      const io = new IntersectionObserver(([e]) => { if (e.isIntersecting){ io.disconnect(); loadCalendar(); } }, {rootMargin:"800px 0px"});
+      io.observe($("book"));
+    } else loadCalendar();
+  }
 
   pickTrade("hvac");
   try { const n = localStorage.getItem("reactivation-unlocked"); if (n) unlock(n); } catch(_) {}
 })();
 </script>
+</body>
+</html>
